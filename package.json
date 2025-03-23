@@ -4,16 +4,24 @@
   "main": "app.js",
   "scripts": {
     "dev": "npx nodemon",
-    "build": "tsc"
+    "build": "tsc",
+    "format": "prettier --write 'src/**/*.{ts,js}'",
+    "lint": "eslint 'src/**/*.{ts,js}' ",
+    "lint:fix": "eslint  --fix 'src/**/*.{ts,js}'"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@eslint/js": "^9.23.0",
     "@types/node": "^22.13.11",
+    "eslint": "^9.23.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.3",
     "tsx": "^4.19.3",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.27.0"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
