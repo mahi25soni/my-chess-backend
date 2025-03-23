@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "dev": "npx nodemon",
-    "build": "tsc",
+    "dev": "npm run lint:fix && npx nodemon",
+    "build": "rm -rf dist && tsc",
     "format": "prettier --write 'src/**/*.{ts,js}'",
     "lint": "eslint 'src/**/*.{ts,js}' ",
-    "lint:fix": "eslint  --fix 'src/**/*.{ts,js}'"
+    "lint:fix": "eslint  --fix 'src/**/*.{ts,js}'",
+    "prepare": "husky",
+    "clean": "rm -rf dist && rm -rf node_modules"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +28,7 @@
   "dependencies": {
     "dotenv": "^16.4.7",
     "gitignore": "^0.7.0",
+    "husky": "^9.1.7",
     "nodemon": "^3.1.9"
   }
 }
