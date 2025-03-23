@@ -1,9 +1,10 @@
-import { PrismaClient } from "@prisma/client";
-const prisma: PrismaClient = new PrismaClient();
+import express, { Express } from "express";
+import dotenv from "dotenv";
+dotenv.config();
+const app: Express = express();
 
-const getUser: any = async() => {
-  const users: any = await prisma.user.findMany();
-  console.log(users);
-};
+const PORT: string | number = process.env.PORT || 4000;
 
-getUser();
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
