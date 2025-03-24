@@ -15,7 +15,10 @@ const PORT: number = Number(process.env.PORT) || 9000;
 
 const httpServer: any = createServer(app);
 const io: any = new Server(httpServer, {
-  /* options */
+  cors: {
+    origin: "http://localhost:5000",
+    methods: ["GET", "POST"]
+  }
 });
 
 interface SinglePlayerInfo {
@@ -49,6 +52,9 @@ io.use((socket: CustomSocket, next: NextFunction) => {
         user_id,
         type_id
       };
+      const roomId: string = `${playerOnline[socket.id].user_id}-${playerOnline[socket.id].type_id}`;
+      playerOnline[socket.id].roomId = roomId;
+      socket.join(roomId);
     }
 
     next();
@@ -58,11 +64,25 @@ io.use((socket: CustomSocket, next: NextFunction) => {
 });
 
 io.on("connection", (socket: CustomSocket) => {
-  if (playerOnline[socket.id] && !playerOnline[socket.id].roomId) {
-    const roomId: string = `${playerOnline[socket.id].user_id}-${playerOnline[socket.id].type_id}`;
-    playerOnline[socket.id].roomId = roomId;
-    socket.join(roomId);
-    return;
+  if (playerOnline[socket.id] && playerOnline[socket.id].roomId) {
+    socket.on(
+      "move",
+      ({
+        from,
+        to,
+        promotion
+      }: {
+        from: string;
+        to: string;
+        promotion: string;
+      }) => {
+        const roomId: any = playerOnline[socket.id]?.roomId;
+        if (!roomId) {
+          return;
+        }
+        socket.to(roomId).emit("move", { from, to, promotion });
+      }
+    );
   }
 
   // ✅ Always emit message when a player joins
@@ -71,12 +91,10 @@ io.on("connection", (socket: CustomSocket) => {
   }
 
   // ✅ Always set up  "move" event for EVERY user
-  socket.on("move", (message: string) => {
-    io.to(playerOnline[socket.id].roomId).emit("move", message);
-  });
 
   socket.on("disconnect", () => {
     console.log("User disconnected", socket.id);
+    delete playerOnline[socket.id];
   });
 });
 
