@@ -26,6 +26,7 @@ export default defineConfig([
       "space-before-function-paren": ["error", "never"],
       "comma-dangle": ["error", "never"],
       "no-console": "warn",
+      "no-useless-catch": "off",
       eqeqeq: ["error", "always"],
       "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/no-explicit-any": "off",
