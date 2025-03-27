@@ -4,6 +4,8 @@ import { LoginTicket, OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+dotenv.config();
 const googleClient: OAuth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID
 );

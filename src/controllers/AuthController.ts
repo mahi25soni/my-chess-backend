@@ -17,6 +17,7 @@ class AuthController {
         success: true
       });
     } catch (error) {
+      console.log("error in AuthController - login: ", error);
       next(error);
     }
   }
