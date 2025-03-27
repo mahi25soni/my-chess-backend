@@ -75,6 +75,7 @@ class AuthService {
       const jwt_token: any = jwt.sign(nData, "your_jwt_secret", {
         expiresIn: "24h"
       });
+
       return {
         user: nData,
         token: jwt_token

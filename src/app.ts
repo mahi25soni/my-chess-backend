@@ -3,9 +3,16 @@ import cors from "cors";
 
 import { app, httpServer, PORT } from "./libs/socketSetup";
 import mainRouter from "./routes/mainRouter";
+import cookieParser from "cookie-parser";
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    credentials: true
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   res.status(500).send({
