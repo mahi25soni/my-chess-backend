@@ -23,6 +23,9 @@ app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
 });
 
 app.use("/api", mainRouter);
+app.get("/test", (req: Request, res: Response) => {
+  res.status(200).send("Server is running");
+});
 
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
