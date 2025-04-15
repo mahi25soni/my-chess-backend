@@ -1,10 +1,23 @@
 import { prisma } from "../libs/dbConnection";
-import { GameCreatePayload } from "../types/gameTypes";
-import { NotFoundException } from "../utils/CustomExceptions";
+import {
+  GameCreatePayload,
+  GameCreateZodSchema,
+  GameUpdateZodSchema
+} from "../types/gameTypes";
+import {
+  ForbiddenException,
+  NotFoundException
+} from "../utils/CustomExceptions";
+import { formatZodError } from "../utils/zodHandling";
 
 class GameService {
   public async create(inputData: GameCreatePayload) {
     try {
+      const zodResult: any = GameCreateZodSchema.safeParse(inputData);
+      if (!zodResult.success) {
+        const message: string = formatZodError(zodResult.error.errors);
+        throw new ForbiddenException(message);
+      }
       const fPlayerOne: any = await prisma.user.findUnique({
         where: {
           id: inputData?.playerOneId
@@ -60,6 +73,11 @@ class GameService {
 
   public async update(inputData: any) {
     try {
+      const zodResult: any = GameUpdateZodSchema.safeParse(inputData);
+      if (!zodResult.success) {
+        const message: string = formatZodError(zodResult.error.errors);
+        throw new ForbiddenException(message);
+      }
       const fGame: any = await prisma.game.findUnique({
         where: {
           id: inputData?.id
@@ -69,7 +87,7 @@ class GameService {
         throw new NotFoundException("This game does not exists");
       }
 
-      if (!inputData?.playerOneId) {
+      if (inputData?.playerOneId) {
         const fPlayerOne: any = await prisma.user.findUnique({
           where: {
             id: inputData?.playerOneId
@@ -80,7 +98,7 @@ class GameService {
         }
       }
 
-      if (!inputData?.playerTwoId) {
+      if (inputData?.playerTwoId) {
         const fPlayerOne: any = await prisma.user.findUnique({
           where: {
             id: inputData?.playerTwoId
@@ -91,7 +109,7 @@ class GameService {
         }
       }
 
-      if (!inputData?.gametypeId) {
+      if (inputData?.gametypeId) {
         const fGameType: any = await prisma.gametype.findUnique({
           where: {
             id: inputData?.gametypeId
@@ -102,7 +120,7 @@ class GameService {
         }
       }
 
-      if (!inputData?.winnerId) {
+      if (inputData?.winnerId) {
         const fWinner: any = await prisma.user.findUnique({
           where: {
             id: inputData?.winnerId
