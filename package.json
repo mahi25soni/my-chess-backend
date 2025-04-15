@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "npm run lint:fix && npx nodemon",
     "build": "rm -rf dist && tsc",
+    "start": "node dist/app.js",
     "format": "prettier --write 'src/**/*.{ts,js}'",
     "lint": "eslint 'src/**/*.{ts,js}' ",
     "lint:fix": "eslint  --fix 'src/**/*.{ts,js}'",

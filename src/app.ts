@@ -14,17 +14,21 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
-  res.status(500).send({
-    success: false,
-    message: err.message || "Internal server error",
-    data: null
-  });
-});
-
 app.use("/api", mainRouter);
 app.get("/test", (req: Request, res: Response) => {
   res.status(200).send("Server is running");
+});
+
+app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+  const statusCode: number = err.statusCode || 500;
+  const errorCode: any = err.errorcode || "unknown_error";
+  const message: any = err.message || "Internal server error";
+
+  res.status(statusCode).send({
+    success: false,
+    message: message,
+    errorCode: errorCode
+  });
 });
 
 httpServer.listen(PORT, () => {
