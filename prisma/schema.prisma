@@ -45,9 +45,9 @@ model Game {
   playerTwoId    String
   gametype       Gametype @relation(fields: [gametypeId], references: [id])
   gametypeId     String
-  winner         User     @relation("GamesWon", fields: [winnerId], references: [id])
-  winnerId       String
-  totalTime      Int
+  winner         User?    @relation("GamesWon", fields: [winnerId], references: [id])
+  winnerId       String?
+  totalTime      Int?
   playerOneColor String
   playerTwoColor String
 
