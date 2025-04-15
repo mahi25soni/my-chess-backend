@@ -18,9 +18,13 @@ model User {
   email     String   @unique
   name      String?
   password  String
-  googleId  String @unique
+  googleId  String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  gamesAsPlayerOne Game[] @relation("PlayerOneGames")
+  gamesAsPlayerTwo Game[] @relation("PlayerTwoGames")
+  gamesWon         Game[] @relation("GamesWon")
 }
 
 model Gametype {
@@ -29,4 +33,24 @@ model Gametype {
   time      Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  games     Game[]
+}
+
+model Game {
+  id             String   @id @default(cuid())
+  playerOne      User     @relation("PlayerOneGames", fields: [playerOneId], references: [id])
+  playerOneId    String
+  playerTwo      User     @relation("PlayerTwoGames", fields: [playerTwoId], references: [id])
+  playerTwoId    String
+  gametype       Gametype @relation(fields: [gametypeId], references: [id])
+  gametypeId     String
+  winner         User     @relation("GamesWon", fields: [winnerId], references: [id])
+  winnerId       String
+  totalTime      Int
+  playerOneColor String
+  playerTwoColor String
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
