@@ -5,7 +5,32 @@ import { NotFoundException } from "../utils/CustomExceptions";
 class GameService {
   public async create(inputData: GameCreatePayload) {
     try {
-      // const data = new
+      const fPlayerOne: any = await prisma.user.findUnique({
+        where: {
+          id: inputData?.playerOneId
+        }
+      });
+      if (!fPlayerOne) {
+        throw new NotFoundException("This player one does not exists");
+      }
+
+      const fPlayerTwo: any = await prisma.user.findUnique({
+        where: {
+          id: inputData?.playerTwoId
+        }
+      });
+      if (!fPlayerTwo) {
+        throw new NotFoundException("This player two does not exists");
+      }
+      const fGameType: any = await prisma.gametype.findUnique({
+        where: {
+          id: inputData?.gametypeId
+        }
+      });
+      if (!fGameType) {
+        throw new NotFoundException("This game type does not exists");
+      }
+
       const nData: any = await prisma.game.create({
         data: inputData
       });
@@ -35,6 +60,58 @@ class GameService {
 
   public async update(inputData: any) {
     try {
+      const fGame: any = await prisma.game.findUnique({
+        where: {
+          id: inputData?.id
+        }
+      });
+      if (!fGame) {
+        throw new NotFoundException("This game does not exists");
+      }
+
+      if (!inputData?.playerOneId) {
+        const fPlayerOne: any = await prisma.user.findUnique({
+          where: {
+            id: inputData?.playerOneId
+          }
+        });
+        if (!fPlayerOne) {
+          throw new NotFoundException("This player one does not exists");
+        }
+      }
+
+      if (!inputData?.playerTwoId) {
+        const fPlayerOne: any = await prisma.user.findUnique({
+          where: {
+            id: inputData?.playerTwoId
+          }
+        });
+        if (!fPlayerOne) {
+          throw new NotFoundException("This player one does not exists");
+        }
+      }
+
+      if (!inputData?.gametypeId) {
+        const fGameType: any = await prisma.gametype.findUnique({
+          where: {
+            id: inputData?.gametypeId
+          }
+        });
+        if (!fGameType) {
+          throw new NotFoundException("This game type does not exists");
+        }
+      }
+
+      if (!inputData?.winnerId) {
+        const fWinner: any = await prisma.user.findUnique({
+          where: {
+            id: inputData?.winnerId
+          }
+        });
+        if (!fWinner) {
+          throw new NotFoundException("This winner user does not exists");
+        }
+      }
       const data: any = await prisma.game.update({
         where: {
           id: inputData?.id
@@ -50,6 +127,15 @@ class GameService {
 
   public async delete(gameId: string) {
     try {
+      const fGame: any = await prisma.game.findUnique({
+        where: {
+          id: gameId
+        }
+      });
+
+      if (!fGame) {
+        throw new NotFoundException("This game does not exists");
+      }
       const data: any = await prisma.game.delete({
         where: {
           id: gameId
