@@ -28,8 +28,7 @@ class GameController {
   public async update(req: Request, res: Response, next: NextFunction) {
     const response: any = new ApiReponse(res);
     try {
-      const gameId: any = req.body.gameId;
-      const data: any = await GameService.update(gameId, req.body);
+      const data: any = await GameService.update(req.body);
       response.sendSuccessResponse(data, "Game updated successfully");
     } catch (error) {
       next(error);

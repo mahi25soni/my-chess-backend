@@ -21,7 +21,7 @@ app.get("/test", (req: Request, res: Response) => {
 
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   const statusCode: number = err.statusCode || 500;
-  const errorCode: any = err.errorcode || "unknown_error";
+  const errorCode: any = err.errorCode || "unknown_error";
   const message: any = err.message || "Internal server error";
 
   res.status(statusCode).send({
