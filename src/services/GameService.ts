@@ -10,6 +10,26 @@ class GameService {
       throw error;
     }
   }
+
+  public async get(userId: string) {
+    try {
+      const data: any = await prisma.game.findMany({
+        where: {
+          OR: [
+            {
+              playerOneId: userId
+            },
+            {
+              playerTwoId: userId
+            }
+          ]
+        }
+      });
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new GameService();

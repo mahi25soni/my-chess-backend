@@ -13,6 +13,17 @@ class GameController {
       next(error);
     }
   }
+
+  public async get(req: Request, res: Response, next: NextFunction) {
+    const response: any = new ApiReponse(res);
+    try {
+      const userId: any = req.params.userId;
+      const data: any = await GameService.get(userId);
+      response.sendSuccessResponse(data, "Games fetched successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new GameController();
