@@ -11,7 +11,50 @@ class GameService {
     }
   }
 
-  public async get(userId: string) {
+  public async get(gameId: string) {
+    try {
+      const data: any = await prisma.game.findUnique({
+        where: {
+          id: gameId
+        }
+      });
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async update(gameId: string, inputData: any) {
+    try {
+      const data: any = await prisma.game.update({
+        where: {
+          id: gameId
+        },
+        data: inputData
+      });
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async delete(gameId: string) {
+    try {
+      const data: any = await prisma.game.delete({
+        where: {
+          id: gameId
+        }
+      });
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async getGameByUser(userId: string) {
     try {
       const data: any = await prisma.game.findMany({
         where: {
