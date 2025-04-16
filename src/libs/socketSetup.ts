@@ -70,17 +70,27 @@ io.on("connection", (socket: CustomSocket) => {
       ({
         from,
         to,
-        promotion
+        promotion,
+        game
       }: {
         from: string;
         to: string;
         promotion: string;
+        game: any;
       }) => {
         const roomId: any = playerOnline[socket.id]?.roomId;
         if (!roomId) {
           return;
         }
-        socket.to(roomId).emit("move", { from, to, promotion });
+        socket.to(roomId).emit("move", {
+          from,
+          to,
+          promotion,
+          game: {
+            fen: game.fen, // FEN for current board state
+            pgn: game.pgn // PGN for move history
+          }
+        });
       }
     );
   }
@@ -104,8 +114,8 @@ io.on("connection", (socket: CustomSocket) => {
 
   // ✅ Always set up  "move" event for EVERY user
 
-  socket.on("disconnect", () => {
-    console.log("User disconnected", socket.id);
+  socket.on("disconnect", (reason: any) => {
+    console.log(`User disconnected (${socket.id}):`, reason);
     delete playerOnline[socket.id];
   });
 });
