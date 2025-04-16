@@ -8,22 +8,21 @@ const PORT: number = Number(process.env.PORT) || 9000;
 const httpServer: any = createServer(app);
 const io: any = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5000",
-    methods: ["GET", "POST"]
+    origin: "*"
   }
 });
 
 interface CustomSocket extends Socket {
   user?: {
-    user_id?: number;
-    type_id?: number;
+    user_id?: string;
+    type_id?: string;
     roomId?: string;
   };
 }
 
 interface SinglePlayerInfo {
-  user_id: number;
-  type_id: number;
+  user_id: string;
+  type_id: string;
   roomId?: string;
 }
 
@@ -32,8 +31,8 @@ const playerOnline: Record<string, SinglePlayerInfo> = {};
 io.use((socket: CustomSocket, next: NextFunction) => {
   if (socket) {
     const { userId, typeId } = socket.handshake.query;
-    const user_id: number = Number(userId);
-    const type_id: number = Number(typeId);
+    const user_id: string = String(userId);
+    const type_id: string = String(typeId);
 
     const searchOpponent: SinglePlayerInfo | undefined = Object.values(
       playerOnline
@@ -52,6 +51,7 @@ io.use((socket: CustomSocket, next: NextFunction) => {
         user_id,
         type_id
       };
+
       const roomId: string = `${playerOnline[socket.id].user_id}-${playerOnline[socket.id].type_id}`;
       playerOnline[socket.id].roomId = roomId;
       socket.join(roomId);
@@ -88,6 +88,18 @@ io.on("connection", (socket: CustomSocket) => {
   // ✅ Always emit message when a player joins
   if (playerOnline[socket.id] && playerOnline[socket.id].roomId) {
     io.to(playerOnline[socket.id].roomId).emit("message", "Hello world");
+  }
+  const room: any = io.sockets.adapter.rooms.get(
+    playerOnline[socket.id].roomId
+  );
+
+  if (room && room.size === 2) {
+    const userIdByRoomId: string | undefined =
+      playerOnline[socket.id].roomId?.split("-")[0];
+    io.to(playerOnline[socket.id].roomId).emit("gameStart", {
+      state: true,
+      firstUser: userIdByRoomId?.toString()
+    });
   }
 
   // ✅ Always set up  "move" event for EVERY user
