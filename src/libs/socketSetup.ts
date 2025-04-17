@@ -114,8 +114,22 @@ io.on("connection", (socket: CustomSocket) => {
 
   // ✅ Always set up  "move" event for EVERY user
 
+  socket.on("quit-event", () => {
+    const roomId: string | undefined = playerOnline[socket.id]?.roomId;
+    const userId: string | undefined = playerOnline[socket.id]?.user_id;
+
+    if (roomId) {
+      socket.to(roomId).emit("quit-event", {
+        state: false,
+        message: "Opponent left the game",
+        userId: userId
+      });
+      socket.leave(roomId);
+    }
+    delete playerOnline[socket.id];
+  });
+
   socket.on("disconnect", (reason: any) => {
-    console.log(`User disconnected (${socket.id}):`, reason);
     const roomId: string | undefined = playerOnline[socket.id]?.roomId;
     const userId: string | undefined = playerOnline[socket.id]?.user_id;
     if (roomId) {
@@ -129,6 +143,7 @@ io.on("connection", (socket: CustomSocket) => {
         socket.leave(roomId);
       }
     }
+    console.log("User disconnected", socket.id, reason);
     delete playerOnline[socket.id];
   });
 });
