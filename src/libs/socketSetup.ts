@@ -116,6 +116,19 @@ io.on("connection", (socket: CustomSocket) => {
 
   socket.on("disconnect", (reason: any) => {
     console.log(`User disconnected (${socket.id}):`, reason);
+    const roomId: string | undefined = playerOnline[socket.id]?.roomId;
+    const userId: string | undefined = playerOnline[socket.id]?.user_id;
+    if (roomId) {
+      const room: any = io.sockets.adapter.rooms.get(roomId);
+      if (room && room.size === 1) {
+        io.to(roomId).emit("quit-event", {
+          state: false,
+          message: "Opponent left the game",
+          userId: userId
+        });
+        socket.leave(roomId);
+      }
+    }
     delete playerOnline[socket.id];
   });
 });
