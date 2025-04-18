@@ -26,6 +26,7 @@ interface SinglePlayerInfo {
   roomId?: string;
   name?: string;
   email?: string;
+  readyToPlay?: boolean;
 }
 
 const playerOnline: Record<string, SinglePlayerInfo> = {};
@@ -39,15 +40,22 @@ io.use((socket: CustomSocket, next: NextFunction) => {
     const searchOpponent: SinglePlayerInfo | undefined = Object.values(
       playerOnline
     ).find((player: SinglePlayerInfo) => {
-      return player.user_id !== user_id && player.type_id === type_id;
+      return (
+        player.readyToPlay &&
+        player.user_id !== user_id &&
+        player.type_id === type_id
+      );
     });
+
+    console.log("found the opponent ", searchOpponent);
     if (searchOpponent && searchOpponent.roomId) {
       playerOnline[socket?.id] = {
         user_id,
         type_id,
         roomId: searchOpponent.roomId,
         name: String(name),
-        email: String(email)
+        email: String(email),
+        readyToPlay: true
       };
       socket.join(searchOpponent.roomId);
     } else {
@@ -55,10 +63,11 @@ io.use((socket: CustomSocket, next: NextFunction) => {
         user_id,
         type_id,
         name: String(name),
-        email: String(email)
+        email: String(email),
+        readyToPlay: true
       };
 
-      const roomId: string = `${playerOnline[socket.id].user_id}-${playerOnline[socket.id].type_id}`;
+      const roomId: string = `${socket.id}-${Date.now()}`;
       playerOnline[socket.id].roomId = roomId;
       socket.join(roomId);
     }
@@ -141,7 +150,11 @@ io.on("connection", (socket: CustomSocket) => {
     const roomId: string | undefined = playerOnline[socket.id]?.roomId;
     const userId: string | undefined = playerOnline[socket.id]?.user_id;
 
-    if (roomId) {
+    const [socketId1, socketId2]: string[] = Array.from(room);
+
+    console.log("the two sockets ids are ", socketId1, socketId2);
+
+    if (roomId && socketId1 && socketId2) {
       socket.to(roomId).emit("quit-event", {
         state: false,
         message: "Opponent left the game",
@@ -150,8 +163,19 @@ io.on("connection", (socket: CustomSocket) => {
       socket.leave(roomId);
     }
     delete playerOnline[socket.id];
+
+    if (socketId1 && socketId2) {
+      const opponentSocketId: string =
+        socket.id === socketId1 ? socketId2 : socketId1;
+      playerOnline[opponentSocketId].readyToPlay = false;
+    }
   });
 
+  socket.on("new-match", () => {
+    if (playerOnline[socket.id]) {
+      playerOnline[socket.id].readyToPlay = true;
+    }
+  });
   socket.on("disconnect", (reason: any) => {
     const roomId: string | undefined = playerOnline[socket.id]?.roomId;
     const userId: string | undefined = playerOnline[socket.id]?.user_id;
