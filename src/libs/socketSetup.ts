@@ -24,13 +24,15 @@ interface SinglePlayerInfo {
   user_id: string;
   type_id: string;
   roomId?: string;
+  name?: string;
+  email?: string;
 }
 
 const playerOnline: Record<string, SinglePlayerInfo> = {};
 
 io.use((socket: CustomSocket, next: NextFunction) => {
   if (socket) {
-    const { userId, typeId } = socket.handshake.query;
+    const { userId, typeId, name, email } = socket.handshake.query;
     const user_id: string = String(userId);
     const type_id: string = String(typeId);
 
@@ -43,13 +45,17 @@ io.use((socket: CustomSocket, next: NextFunction) => {
       playerOnline[socket?.id] = {
         user_id,
         type_id,
-        roomId: searchOpponent.roomId
+        roomId: searchOpponent.roomId,
+        name: String(name),
+        email: String(email)
       };
       socket.join(searchOpponent.roomId);
     } else {
       playerOnline[socket?.id] = {
         user_id,
-        type_id
+        type_id,
+        name: String(name),
+        email: String(email)
       };
 
       const roomId: string = `${playerOnline[socket.id].user_id}-${playerOnline[socket.id].type_id}`;
@@ -97,18 +103,35 @@ io.on("connection", (socket: CustomSocket) => {
 
   // ✅ Always emit message when a player joins
   if (playerOnline[socket.id] && playerOnline[socket.id].roomId) {
-    io.to(playerOnline[socket.id].roomId).emit("message", "Hello world");
+    io.to(playerOnline[socket.id].roomId).emit(
+      "message",
+      `${playerOnline[socket.id].name} joined the game`
+    );
   }
   const room: any = io.sockets.adapter.rooms.get(
     playerOnline[socket.id].roomId
   );
 
   if (room && room.size === 2) {
-    const userIdByRoomId: string | undefined =
-      playerOnline[socket.id].roomId?.split("-")[0];
-    io.to(playerOnline[socket.id].roomId).emit("gameStart", {
+    const [socketId1, socketId2]: string[] = Array.from(room);
+    const player1: SinglePlayerInfo = playerOnline[socketId1];
+    const player2: SinglePlayerInfo = playerOnline[socketId2];
+
+    const socket1: Socket = io.sockets.sockets.get(socketId1);
+    const socket2: Socket = io.sockets.sockets.get(socketId2);
+
+    socket1?.emit("gameStart", {
       state: true,
-      firstUser: userIdByRoomId?.toString()
+      firstUser: player1?.user_id,
+      opponentName: player2?.name,
+      opponentEmail: player2?.email
+    });
+
+    socket2?.emit("gameStart", {
+      state: true,
+      firstUser: player1?.user_id,
+      opponentName: player1?.name,
+      opponentEmail: player1?.email
     });
   }
 
