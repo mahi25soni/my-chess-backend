@@ -48,10 +48,16 @@ model Game {
   gametypeId     String
   winner         User?    @relation("GamesWon", fields: [winnerId], references: [id])
   winnerId       String?
-  totalTime      Int?
-  playerOneColor String?
-  playerTwoColor String?
+  playerOneColor String? @default("white")
+  playerTwoColor String? @default("black")
+  colorWon      String?
+  fen String?
+  pgn String?
+  gameHistory String[]
   matchCompleted Boolean @default(false)
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  totalTime Int?
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

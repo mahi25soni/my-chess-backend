@@ -139,10 +139,10 @@ io.on("connection", async(socket: CustomSocket) => {
     const gameData: any = await GameService.create({
       playerOneId: player1.user_id,
       playerTwoId: player2.user_id,
-      gametypeId: player1.type_id
+      gametypeId: player1.type_id,
+      gameHistory: [],
+      startedAt: new Date()
     });
-
-    console.log("gameData", gameData);
 
     socket1?.emit("gameStart", {
       state: true,
@@ -203,20 +203,21 @@ io.on("connection", async(socket: CustomSocket) => {
     const player1: SinglePlayerInfo = playerOnline[socketId1];
     const player2: SinglePlayerInfo = playerOnline[socketId2];
 
-    console.log("game-over", data);
-
-    const updateGame: any = await GameService.update({
+    await GameService.update({
       id: player1.gameId,
       winnerId: data.winner.id,
-      matchCompleted: true
+      matchCompleted: true,
+      colorWon: data.winner.color === "w" ? "white" : "black",
+      finishedAt: new Date(),
+      fen: data.game.fen,
+      pgn: data.game.pgn,
+      gameHistory: data.game.history
     });
 
     player1.readyToPlay = false;
     player2.readyToPlay = false;
     player1.gameId = null;
     player2.gameId = null;
-
-    console.log("updateGame", updateGame);
   });
   socket.on("new-match", () => {
     if (playerOnline[socket.id]) {
