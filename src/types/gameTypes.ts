@@ -17,8 +17,6 @@ export type GameCreatePayload = {
   playerOneId: string;
   playerTwoId: string;
   gametypeId: string;
-  playerOneColor: string;
-  playerTwoColor: string;
 };
 
 export type GameUpdatePayload = {
@@ -36,9 +34,7 @@ export type GameUpdatePayload = {
 export const GameCreateZodSchema: any = z.object({
   playerOneId: z.string().nonempty(),
   playerTwoId: z.string().nonempty(),
-  gametypeId: z.string().nonempty(),
-  playerOneColor: z.string().nonempty(),
-  playerTwoColor: z.string().nonempty()
+  gametypeId: z.string().nonempty()
 });
 
 export const GameUpdateZodSchema: any = z.object({

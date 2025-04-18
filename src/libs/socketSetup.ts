@@ -1,6 +1,7 @@
 import express, { Express, NextFunction } from "express";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
+import GameService from "../services/GameService";
 
 const app: Express = express();
 const PORT: number = Number(process.env.PORT) || 9000;
@@ -28,6 +29,7 @@ interface SinglePlayerInfo {
   email?: string;
   readyToPlay?: boolean;
   alreadyInGame?: boolean;
+  gameId?: string | null;
 }
 
 const playerOnline: Record<string, SinglePlayerInfo> = {};
@@ -57,7 +59,8 @@ io.use((socket: CustomSocket, next: NextFunction) => {
         name: String(name),
         email: String(email),
         readyToPlay: true,
-        alreadyInGame: false
+        alreadyInGame: false,
+        gameId: null
       };
       socket.join(searchOpponent.roomId);
     } else {
@@ -67,7 +70,8 @@ io.use((socket: CustomSocket, next: NextFunction) => {
         name: String(name),
         email: String(email),
         readyToPlay: true,
-        alreadyInGame: false
+        alreadyInGame: false,
+        gameId: null
       };
 
       const roomId: string = `${socket.id}-${Date.now()}`;
@@ -81,7 +85,7 @@ io.use((socket: CustomSocket, next: NextFunction) => {
   }
 });
 
-io.on("connection", (socket: CustomSocket) => {
+io.on("connection", async(socket: CustomSocket) => {
   if (playerOnline[socket.id] && playerOnline[socket.id].roomId) {
     socket.on(
       "move",
@@ -132,22 +136,34 @@ io.on("connection", (socket: CustomSocket) => {
     const socket1: Socket = io.sockets.sockets.get(socketId1);
     const socket2: Socket = io.sockets.sockets.get(socketId2);
 
+    const gameData: any = await GameService.create({
+      playerOneId: player1.user_id,
+      playerTwoId: player2.user_id,
+      gametypeId: player1.type_id
+    });
+
+    console.log("gameData", gameData);
+
     socket1?.emit("gameStart", {
       state: true,
       firstUser: player1?.user_id,
       opponentName: player2?.name,
-      opponentEmail: player2?.email
+      opponentEmail: player2?.email,
+      opponentId: player2?.user_id
     });
 
     socket2?.emit("gameStart", {
       state: true,
       firstUser: player1?.user_id,
       opponentName: player1?.name,
-      opponentEmail: player1?.email
+      opponentEmail: player1?.email,
+      opponentId: player1?.user_id
     });
 
     player1.alreadyInGame = true;
     player2.alreadyInGame = true;
+    player1.gameId = gameData.id;
+    player2.gameId = gameData.id;
   }
 
   // ✅ Always set up  "move" event for EVERY user
@@ -178,18 +194,29 @@ io.on("connection", (socket: CustomSocket) => {
       const opponentSocketId: string =
         socket.id === socketId1 ? socketId2 : socketId1;
       playerOnline[opponentSocketId].readyToPlay = false;
+      playerOnline[opponentSocketId].gameId = null;
     }
   });
 
-  socket.on("game-over", (data: any) => {
+  socket.on("game-over", async(data: any) => {
     const [socketId1, socketId2]: string[] = Array.from(room);
     const player1: SinglePlayerInfo = playerOnline[socketId1];
     const player2: SinglePlayerInfo = playerOnline[socketId2];
 
     console.log("game-over", data);
 
+    const updateGame: any = await GameService.update({
+      id: player1.gameId,
+      winnerId: data.winner.id,
+      matchCompleted: true
+    });
+
     player1.readyToPlay = false;
     player2.readyToPlay = false;
+    player1.gameId = null;
+    player2.gameId = null;
+
+    console.log("updateGame", updateGame);
   });
   socket.on("new-match", () => {
     if (playerOnline[socket.id]) {
