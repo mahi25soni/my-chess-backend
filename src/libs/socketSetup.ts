@@ -27,6 +27,7 @@ interface SinglePlayerInfo {
   name?: string;
   email?: string;
   readyToPlay?: boolean;
+  alreadyInGame?: boolean;
 }
 
 const playerOnline: Record<string, SinglePlayerInfo> = {};
@@ -42,12 +43,12 @@ io.use((socket: CustomSocket, next: NextFunction) => {
     ).find((player: SinglePlayerInfo) => {
       return (
         player.readyToPlay &&
+        !player.alreadyInGame &&
         player.user_id !== user_id &&
         player.type_id === type_id
       );
     });
 
-    console.log("found the opponent ", searchOpponent);
     if (searchOpponent && searchOpponent.roomId) {
       playerOnline[socket?.id] = {
         user_id,
@@ -55,7 +56,8 @@ io.use((socket: CustomSocket, next: NextFunction) => {
         roomId: searchOpponent.roomId,
         name: String(name),
         email: String(email),
-        readyToPlay: true
+        readyToPlay: true,
+        alreadyInGame: false
       };
       socket.join(searchOpponent.roomId);
     } else {
@@ -64,7 +66,8 @@ io.use((socket: CustomSocket, next: NextFunction) => {
         type_id,
         name: String(name),
         email: String(email),
-        readyToPlay: true
+        readyToPlay: true,
+        alreadyInGame: false
       };
 
       const roomId: string = `${socket.id}-${Date.now()}`;
@@ -142,22 +145,29 @@ io.on("connection", (socket: CustomSocket) => {
       opponentName: player1?.name,
       opponentEmail: player1?.email
     });
+
+    player1.alreadyInGame = true;
+    player2.alreadyInGame = true;
   }
 
   // ✅ Always set up  "move" event for EVERY user
 
-  socket.on("quit-event", () => {
+  socket.on("quit-event", (message: string) => {
     const roomId: string | undefined = playerOnline[socket.id]?.roomId;
     const userId: string | undefined = playerOnline[socket.id]?.user_id;
 
     const [socketId1, socketId2]: string[] = Array.from(room);
 
-    console.log("the two sockets ids are ", socketId1, socketId2);
-
-    if (roomId && socketId1 && socketId2) {
+    if (
+      roomId &&
+      socketId1 &&
+      socketId2 &&
+      playerOnline[socketId1]?.readyToPlay &&
+      playerOnline[socketId2]?.readyToPlay
+    ) {
       socket.to(roomId).emit("quit-event", {
         state: false,
-        message: "Opponent left the game",
+        message: message,
         userId: userId
       });
       socket.leave(roomId);
@@ -171,9 +181,20 @@ io.on("connection", (socket: CustomSocket) => {
     }
   });
 
+  socket.on("game-over", (data: any) => {
+    const [socketId1, socketId2]: string[] = Array.from(room);
+    const player1: SinglePlayerInfo = playerOnline[socketId1];
+    const player2: SinglePlayerInfo = playerOnline[socketId2];
+
+    console.log("game-over", data);
+
+    player1.readyToPlay = false;
+    player2.readyToPlay = false;
+  });
   socket.on("new-match", () => {
     if (playerOnline[socket.id]) {
       playerOnline[socket.id].readyToPlay = true;
+      playerOnline[socket.id].alreadyInGame = false;
     }
   });
   socket.on("disconnect", (reason: any) => {
