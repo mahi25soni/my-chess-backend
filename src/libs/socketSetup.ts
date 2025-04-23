@@ -21,6 +21,9 @@ interface CustomSocket extends Socket {
   };
 }
 
+type ColorType = "white" | "black";
+type MatchEndReason = "resigned" | "quit" | "back";
+
 interface SinglePlayerInfo {
   user_id: string;
   type_id: string;
@@ -30,6 +33,7 @@ interface SinglePlayerInfo {
   readyToPlay?: boolean;
   alreadyInGame?: boolean;
   gameId?: string | null;
+  color?: ColorType;
 }
 
 const playerOnline: Record<string, SinglePlayerInfo> = {};
@@ -133,6 +137,9 @@ io.on("connection", async(socket: CustomSocket) => {
     const player1: SinglePlayerInfo = playerOnline[socketId1];
     const player2: SinglePlayerInfo = playerOnline[socketId2];
 
+    player1.color = "white";
+    player2.color = "black";
+
     const socket1: Socket = io.sockets.sockets.get(socketId1);
     const socket2: Socket = io.sockets.sockets.get(socketId2);
 
@@ -168,56 +175,82 @@ io.on("connection", async(socket: CustomSocket) => {
 
   // ✅ Always set up  "move" event for EVERY user
 
-  socket.on("quit-event", (message: string) => {
-    const roomId: string | undefined = playerOnline[socket.id]?.roomId;
-    const userId: string | undefined = playerOnline[socket.id]?.user_id;
+  socket.on(
+    "quit-event",
+    async(data: {
+      message: string;
+      reason: MatchEndReason;
+      game: {
+        fen: string;
+        pgn: string;
+        history: any[];
+      };
+    }) => {
+      const roomId: string | undefined = playerOnline[socket.id]?.roomId;
+      const userId: string | undefined = playerOnline[socket.id]?.user_id;
 
-    const [socketId1, socketId2]: string[] = Array.from(room);
+      const [socketId1, socketId2]: string[] = Array.from(room);
 
-    if (
-      roomId &&
-      socketId1 &&
-      socketId2 &&
-      playerOnline[socketId1]?.readyToPlay &&
-      playerOnline[socketId2]?.readyToPlay
-    ) {
-      socket.to(roomId).emit("quit-event", {
-        state: false,
-        message: message,
-        userId: userId
-      });
-      socket.leave(roomId);
+      if (
+        roomId &&
+        socketId1 &&
+        socketId2 &&
+        playerOnline[socketId1]?.readyToPlay &&
+        playerOnline[socketId2]?.readyToPlay
+      ) {
+        socket.to(roomId).emit("quit-event", {
+          state: false,
+          message: data?.message,
+          userId: userId
+        });
+        socket.leave(roomId);
+      }
+      delete playerOnline[socket.id];
+
+      if (socketId1 && socketId2) {
+        const winnerSocketId: string =
+          socket.id === socketId1 ? socketId2 : socketId1;
+        const winnerPlayer: SinglePlayerInfo = playerOnline[winnerSocketId];
+
+        await GameService.update({
+          id: winnerPlayer.gameId,
+          winnerId: winnerPlayer.user_id,
+          matchCompleted: true,
+          colorWon: winnerPlayer.color,
+          finishedAt: new Date(),
+          fen: data.game.fen,
+          pgn: data.game.pgn,
+          gameHistory: data.game.history
+        });
+
+        playerOnline[winnerSocketId].readyToPlay = false;
+        playerOnline[winnerSocketId].gameId = null;
+      }
     }
-    delete playerOnline[socket.id];
-
-    if (socketId1 && socketId2) {
-      const opponentSocketId: string =
-        socket.id === socketId1 ? socketId2 : socketId1;
-      playerOnline[opponentSocketId].readyToPlay = false;
-      playerOnline[opponentSocketId].gameId = null;
-    }
-  });
+  );
 
   socket.on("game-over", async(data: any) => {
     const [socketId1, socketId2]: string[] = Array.from(room);
     const player1: SinglePlayerInfo = playerOnline[socketId1];
     const player2: SinglePlayerInfo = playerOnline[socketId2];
 
-    await GameService.update({
-      id: player1.gameId,
-      winnerId: data.winner.id,
-      matchCompleted: true,
-      colorWon: data.winner.color === "w" ? "white" : "black",
-      finishedAt: new Date(),
-      fen: data.game.fen,
-      pgn: data.game.pgn,
-      gameHistory: data.game.history
-    });
+    if (socketId1 && socketId2) {
+      await GameService.update({
+        id: player1.gameId,
+        winnerId: data.winner.id,
+        matchCompleted: true,
+        colorWon: data.winner.color === "w" ? "white" : "black",
+        finishedAt: new Date(),
+        fen: data.game.fen,
+        pgn: data.game.pgn,
+        gameHistory: data.game.history
+      });
 
-    player1.readyToPlay = false;
-    player2.readyToPlay = false;
-    player1.gameId = null;
-    player2.gameId = null;
+      player1.readyToPlay = false;
+      player2.readyToPlay = false;
+      player1.gameId = null;
+      player2.gameId = null;
+    }
   });
   socket.on("new-match", () => {
     if (playerOnline[socket.id]) {
