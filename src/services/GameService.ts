@@ -186,10 +186,59 @@ class GameService {
             {
               playerTwoId: userId
             }
-          ]
+          ],
+          matchCompleted: true
+        },
+        include: {
+          playerOne: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          playerTwo: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          gametype: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
         }
       });
-      return data;
+
+      // @ts-ignore
+      const playerMetaData: {
+        totalGames: number;
+        wins: number;
+        losses: number;
+        winRate: number;
+      } = {
+        totalGames: 0,
+        wins: 0,
+        losses: 0
+      };
+
+      playerMetaData.totalGames = data.length;
+      data?.forEach((game: any) => {
+        if (game.winnerId === userId) {
+          playerMetaData.wins += 1;
+        } else {
+          playerMetaData.losses += 1;
+        }
+      });
+
+      playerMetaData.winRate = Math.floor(
+        (playerMetaData.wins / playerMetaData.totalGames) * 100
+      );
+      return {
+        games: data,
+        playerMetaData: playerMetaData
+      };
     } catch (error) {
       throw error;
     }

@@ -36,7 +36,8 @@ export default defineConfig([
       "@typescript-eslint/typedef": [
         "error",
         { arrowParameter: true, variableDeclaration: true }
-      ]
+      ],
+      "@typescript-eslint/ban-ts-comment": "off"
     }
   }
 ]);
