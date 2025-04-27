@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
+    "test": "npx nodemon",
     "dev": "npm run lint:fix && npx nodemon",
     "build": "rm -rf dist && tsc",
     "start": "node dist/app.js",
@@ -41,6 +42,7 @@
     "jsonwebtoken": "^9.0.2",
     "nodemon": "^3.1.9",
     "socket.io": "^4.8.1",
+    "typescript-json-schema": "^0.65.1",
     "uuid": "^11.1.0",
     "zod": "^3.24.2"
   }

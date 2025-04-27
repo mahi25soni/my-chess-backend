@@ -1,23 +1,10 @@
 import { prisma } from "../libs/dbConnection";
-import {
-  GameCreatePayload,
-  GameCreateZodSchema,
-  GameUpdateZodSchema
-} from "../types/gameTypes";
-import {
-  ForbiddenException,
-  NotFoundException
-} from "../utils/CustomExceptions";
-import { formatZodError } from "../utils/zodHandling";
+import { GameCreatePayload } from "../types/gameTypes";
+import { NotFoundException } from "../utils/CustomExceptions";
 
 class GameService {
   public async create(inputData: GameCreatePayload) {
     try {
-      const zodResult: any = GameCreateZodSchema.safeParse(inputData);
-      if (!zodResult.success) {
-        const message: string = formatZodError(zodResult.error.errors);
-        throw new ForbiddenException(message);
-      }
       const fPlayerOne: any = await prisma.user.findUnique({
         where: {
           id: inputData?.playerOneId
@@ -73,11 +60,6 @@ class GameService {
 
   public async update(inputData: any) {
     try {
-      const zodResult: any = GameUpdateZodSchema.safeParse(inputData);
-      if (!zodResult.success) {
-        const message: string = formatZodError(zodResult.error.errors);
-        throw new ForbiddenException(message);
-      }
       const fGame: any = await prisma.game.findUnique({
         where: {
           id: inputData?.id

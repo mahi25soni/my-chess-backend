@@ -1,0 +1,12 @@
+{
+  "v1/api/game": {
+    "/get": {
+      "type": "GameCreatePayload",
+      "file": "types/gameTypes.ts"
+    },
+    "/update": {
+      "type": "GameUpdatePayload",
+      "file": "types/gameTypes.ts"
+    }
+  }
+}
