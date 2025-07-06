@@ -1,12 +1,26 @@
-{
-  "v1/api/game": {
-    "/get": {
-      "type": "GameCreatePayload",
-      "file": "types/gameTypes.ts"
-    },
-    "/update": {
-      "type": "GameUpdatePayload",
-      "file": "types/gameTypes.ts"
-    }
+[
+  {
+    "source": "types/gameTypes.ts",
+    "baseUrl": "/api/game",
+    "schema": [
+      {
+        "api": "/api/game/create",
+        "method": "POST",
+        "source": "types/gameTypes.ts",
+        "schema": "GameCreatePayload"
+      }
+    ]
+  },
+  {
+    "source": "types/userTypes.ts",
+    "baseUrl": "/api/user",
+    "schema": [
+      {
+        "api": "/api/user/testing",
+        "method": "POST",
+        "source": "types/userTypes.ts",
+        "schema": "UserCreatePayload"
+      }
+    ]
   }
-}
+]

@@ -1,4 +1,4 @@
-type UserData = {
+export type UserData = {
   id: string;
   email: string;
   name?: string | null;
@@ -7,4 +7,8 @@ type UserData = {
   updatedAt: Date;
 };
 
-export { UserData };
+export type UserCreatePayload = {
+  email: string;
+  name?: string;
+  password: string;
+};

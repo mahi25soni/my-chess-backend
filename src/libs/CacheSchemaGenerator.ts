@@ -1,64 +1,76 @@
-import * as TJS from "typescript-json-schema";
-import { readFileSync, writeFileSync } from "fs";
 import path from "path";
+import * as fs from "fs";
 import crypto from "crypto";
+import * as TJS from "typescript-json-schema";
 
-const catchedFilePath: any = path.join(__dirname, "../../cache.json");
+const schemaFilePath: string = path.join(__dirname, "../schemas/schemas.json");
+
+// Cache.json filepath and checking
+const cacheFilePath: string = path.join(__dirname, "../../cache.json");
+fs.existsSync(cacheFilePath) ||
+  fs.mkdirSync(cacheFilePath, {
+    recursive: true
+  });
+
+// Bsic tjs setting
+const settings: TJS.PartialArgs = {
+  required: true,
+  noExtraProps: true
+};
+const compilerOptions: TJS.CompilerOptions = {
+  strictNullChecks: true
+};
 
 const generateCacheSchema: any = (): any => {
-  const settings: any = {
-    required: true
-  };
+  const schemaData: any = JSON.parse(
+    fs.readFileSync(schemaFilePath, {
+      encoding: "utf-8"
+    })
+  );
 
-  const filePath: any = path.join(__dirname, "../schemas/schemas.json");
-  const schemaJsonFile: any = readFileSync(filePath, {
-    encoding: "utf8",
-    flag: "r"
-  });
-  const cacheJsonFile: any = readFileSync(catchedFilePath, {
-    encoding: "utf8",
-    flag: "r"
-  });
+  console.log("the shcme data is ", schemaData);
 
-  console.log("schemaJsonFile", typeof schemaJsonFile);
+  const stats = fs.statSync(cacheFilePath);
+  stats.size === 0 ? fs.writeFileSync(cacheFilePath, "{}") : "";
 
-  const parsedSchemaFile: any = JSON.parse(schemaJsonFile);
-  const parsedCacheFile: any = JSON.parse(cacheJsonFile);
+  const cachedData: any = JSON.parse(
+    fs.readFileSync(cacheFilePath, {
+      encoding: "utf-8"
+    })
+  );
 
-  Object.keys(parsedSchemaFile).forEach((route: any) => {
-    Object.keys(parsedSchemaFile[route]).forEach((method: any) => {
-      const finalObject: any = parsedSchemaFile[route][method];
-      const fileTypePath: any = path.resolve(
-        __dirname,
-        `../${finalObject.file}`
-      );
-      const program: any = TJS.getProgramFromFiles([fileTypePath], {
-        strictNullChecks: true
-      });
+  schemaData?.map((element: any) => {
+    const sourceFile: string = path.join(__dirname, `../${element?.source}`);
+    const sourceFileData: any = fs.readFileSync(sourceFile, "utf-8");
+    const hashSourceFile: string = crypto
+      .createHash("sha256")
+      .update(sourceFileData)
+      .digest("hex");
 
-      const hashOfFile: any = crypto
-        .createHash("sha256")
-        .update(readFileSync(fileTypePath))
-        .digest("hex");
-      if (!parsedCacheFile[route]) {
-        parsedCacheFile[route] = {
-          hash: hashOfFile
+    if (!cachedData[element?.baseUrl]) {
+      cachedData[element.baseUrl] = {};
+    }
+
+    if (cachedData[element?.baseUrl]?.hash !== hashSourceFile) {
+      console.log("hash toh change huva hai daai, kuchh bhi kaho");
+      cachedData[element?.baseUrl].hash = hashSourceFile;
+      cachedData[element?.baseUrl].schemas = {};
+      const program = TJS.getProgramFromFiles([sourceFile], compilerOptions);
+      element?.schema.map((singleSchema: any) => {
+        const tjsGeneratedSchema = TJS.generateSchema(
+          program,
+          singleSchema.schema,
+          settings
+        );
+        cachedData[element?.baseUrl].schemas = {
+          ...cachedData[element?.baseUrl.schhemas],
+          [singleSchema.api]: tjsGeneratedSchema
         };
-      }
+        const dataForCache = JSON.stringify(cachedData, null, 2);
 
-      const schema: any = TJS.generateSchema(
-        program,
-        finalObject.type,
-        settings
-      );
-
-      parsedCacheFile[route][method] = schema;
-      const something: any = JSON.stringify(parsedCacheFile, null, 2);
-      writeFileSync(catchedFilePath, something, {
-        encoding: "utf8",
-        flag: "w"
+        fs.writeFileSync(cacheFilePath, dataForCache, "utf-8");
       });
-    });
+    }
   });
 };
 

@@ -1,114 +1,86 @@
 {
-  "v1/api/game": {
+  "/api/game": {
     "hash": "8e6ed2fcbb3424fc4a1155a2de00a4926ea685893cc1c53f251145105aa3434c",
-    "/get": {
-      "type": "object",
-      "properties": {
-        "playerOneId": {
-          "type": "string"
+    "schemas": {
+      "/api/game/create": {
+        "type": "object",
+        "properties": {
+          "playerOneId": {
+            "type": "string"
+          },
+          "playerTwoId": {
+            "type": "string"
+          },
+          "gametypeId": {
+            "type": "string"
+          },
+          "playerOneColor": {
+            "type": "string"
+          },
+          "playerTwoColor": {
+            "type": "string"
+          },
+          "colorWon": {
+            "type": "string"
+          },
+          "fen": {
+            "type": "string"
+          },
+          "pgn": {
+            "type": "string"
+          },
+          "gameHistory": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "matchCompleted": {
+            "type": "boolean"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
         },
-        "playerTwoId": {
-          "type": "string"
-        },
-        "gametypeId": {
-          "type": "string"
-        },
-        "playerOneColor": {
-          "type": "string"
-        },
-        "playerTwoColor": {
-          "type": "string"
-        },
-        "colorWon": {
-          "type": "string"
-        },
-        "fen": {
-          "type": "string"
-        },
-        "pgn": {
-          "type": "string"
-        },
-        "gameHistory": {
-          "type": "array",
-          "items": {
+        "additionalProperties": false,
+        "required": [
+          "gameHistory",
+          "gametypeId",
+          "playerOneId",
+          "playerTwoId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    }
+  },
+  "/api/user": {
+    "hash": "9158219b93f5b6888a10d37ec28c9243e7fa56fcefbac8da07712b84de4ea0ce",
+    "schemas": {
+      "/api/user/testing": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "password": {
             "type": "string"
           }
         },
-        "matchCompleted": {
-          "type": "boolean"
-        },
-        "startedAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "finishedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "gameHistory",
-        "gametypeId",
-        "playerOneId",
-        "playerTwoId"
-      ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "/update": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "playerOneId": {
-          "type": "string"
-        },
-        "playerTwoId": {
-          "type": "string"
-        },
-        "gametypeId": {
-          "type": "string"
-        },
-        "winnerId": {
-          "type": "string"
-        },
-        "playerOneColor": {
-          "type": "string"
-        },
-        "playerTwoColor": {
-          "type": "string"
-        },
-        "colorWon": {
-          "type": "string"
-        },
-        "fen": {
-          "type": "string"
-        },
-        "pgn": {
-          "type": "string"
-        },
-        "gameHistory": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "matchCompleted": {
-          "type": "boolean"
-        },
-        "startedAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "finishedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id"
-      ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
+        "additionalProperties": false,
+        "required": [
+          "email",
+          "password"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
     }
   }
 }

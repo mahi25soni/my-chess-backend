@@ -1,9 +1,11 @@
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 
-import { app, PORT } from "./libs/socketSetup";
+import { app, httpServer, PORT } from "./libs/socketSetup";
+import mainRouter from "./routes/mainRouter";
 import cookieParser from "cookie-parser";
 import generateCacheSchema from "./libs/CacheSchemaGenerator";
+import apiSchemaMiddleware from "./middlwares/ApiSchemaMiddleware";
 
 app.use(
   cors({
@@ -14,7 +16,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// app.use("/api", mainRouter);
+app.use(apiSchemaMiddleware.checkSchema);
+
+app.use("/api", mainRouter);
 app.get("/test", (req: Request, res: Response) => {
   res.status(200).send("Server is running");
 });
@@ -31,7 +35,7 @@ app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   generateCacheSchema();
   console.log(`Server is running on port ${PORT}`);
 });
